@@ -1,0 +1,4 @@
+enum ImageUtilitiesFormat {
+  jpeg,
+  png,
+}
