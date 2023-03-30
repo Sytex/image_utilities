@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 
 public class ImageUtilitiesPlugin: NSObject, FlutterPlugin {
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "image_utilities", binaryMessenger: registrar.messenger())
     let instance = ImageUtilitiesPlugin()
@@ -26,13 +27,26 @@ public class ImageUtilitiesPlugin: NSObject, FlutterPlugin {
     let args = call.arguments as! [String: Any]
     let imagePath = args["imagePath"] as! String
     let targetPath = args["targetPath"] as! String
-    let maxSize = args["maxSize"] as! Int
+    let maxSize = args["maxSize"] as! CGFloat
     let format = args["format"] as! Int
     
     // Load the image from the path
     let image = UIImage(contentsOfFile: imagePath)
-    let width = Int(image!.size.width)
-    let height = Int(image!.size.height)
+
+    // If the image does not exist, return an error
+    if (image == nil) {
+      result(
+        FlutterError(
+          code: "Image not found", 
+          message: "The image at the specified path (\(imagePath)) could not be found.", 
+          details: nil
+        )
+      )
+      return
+    }
+
+    let width = image!.size.width
+    let height = image!.size.height
 
     // Calculate the new size
     var newWidth = width
@@ -42,8 +56,8 @@ public class ImageUtilitiesPlugin: NSObject, FlutterPlugin {
 
     if (shouldResize) {
       let ratio = width / height
-      newWidth = ratio > 1 ? maxSize : Int(maxSize * ratio)
-      newHeight = ratio > 1 ?  Int(maxSize / ratio) : maxSize
+      newWidth = ratio > 1.0 ? maxSize : (maxSize * ratio).rounded(.up)
+      newHeight = ratio > 1.0 ?  (maxSize / ratio).rounded(.up) : maxSize
     }
 
     // Create a new image context
@@ -54,6 +68,18 @@ public class ImageUtilitiesPlugin: NSObject, FlutterPlugin {
 
     // Get the new image from the context
     let newImage = UIGraphicsGetImageFromCurrentImageContext()
+
+    // If new image is nil, return an error
+    if (newImage == nil) {
+      result(
+        FlutterError(
+          code: "Image context not found", 
+          message: "The image context could not be found.",
+          details: nil
+        )
+      )
+      return
+    }
 
     // End the context
     UIGraphicsEndImageContext()
@@ -77,6 +103,18 @@ public class ImageUtilitiesPlugin: NSObject, FlutterPlugin {
     // Load the image from the path
     let image = UIImage(contentsOfFile: imagePath)
 
+    // If the image does not exist, return an error
+    if (image == nil) {
+      result(
+        FlutterError(
+          code: "Image not found", 
+          message: "The image at the specified path (\(imagePath)) could not be found.", 
+          details: nil
+        )
+      )
+      return
+    }
+
     // Calculate the new size
     let radians = CGFloat(degrees) * CGFloat.pi / 180.0
     let rotatedSize = CGRect(origin: .zero, size: image!.size).applying(
@@ -99,6 +137,18 @@ public class ImageUtilitiesPlugin: NSObject, FlutterPlugin {
 
     // Get the new image from the context
     let newImage = UIGraphicsGetImageFromCurrentImageContext()
+
+    // If new image is nil, return an error
+    if (newImage == nil) {
+      result(
+        FlutterError(
+          code: "Image context not found", 
+          message: "The image context could not be found.",
+          details: nil
+        )
+      )
+      return
+    }
 
     // End the context
     UIGraphicsEndImageContext()
